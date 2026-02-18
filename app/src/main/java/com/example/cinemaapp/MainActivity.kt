@@ -3,6 +3,7 @@ package com.example.cinemaapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,7 +49,8 @@ data class Movie(
     val title: String,
     val description: String,
     val rating: String,
-    val showtimes: String
+    val showtimes: String,
+    val imageResource: Int
 )
 
 val sampleMovies = listOf(
@@ -55,43 +59,41 @@ val sampleMovies = listOf(
         title = "Avatar: Fire and Ash",
         description = "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
         rating = "PG-13",
-        showtimes = "12:00 PM, 3:30 PM, 7:00 PM, 10:45 PM"
+        showtimes = "12:00 PM, 3:30 PM, 7:00 PM, 10:45 PM",
+        imageResource = R.drawable.avatar
     ),
     Movie(
         id = "2",
         title = "Wuthering Heights",
         description = "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
         rating = "R",
-        showtimes = "4:15 PM, 6:50 PM, 9:30 PM"
+        showtimes = "4:15 PM, 6:50 PM, 9:30 PM",
+        imageResource = R.drawable.wuthering_heights
     ),
     Movie(
         id = "3",
         title = "Goat",
         description = "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
         rating = "PG",
-        showtimes = "10:00 AM, 12:30 PM, 2:45 PM"
+        showtimes = "10:00 AM, 12:30 PM, 2:45 PM",
+        imageResource = R.drawable.goat
     ),
     Movie(
         id = "4",
         title = "Mercy",
         description = "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
         rating = "PG-13",
-        showtimes = "1:15 PM, 4:00 PM, 7:30 PM"
+        showtimes = "1:15 PM, 4:00 PM, 7:30 PM",
+        imageResource = R.drawable.mercy
     ),
     Movie(
         id = "5",
         title = "Scream 7",
         description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
-        showtimes = "Advance Screening: Feb 26 @ 8:00 PM"
-    ),
-    Movie(
-        id = "6",
-        title = "Iron Lung",
-        description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
-        rating = "R",
-        showtimes = "6:45 PM, 9 PM"
-    ),
+        showtimes = "Advance Screening: Feb 26 @ 8:00 PM",
+        imageResource = R.drawable.scream_7
+    )
 )
 
 // ==========================================
@@ -149,6 +151,12 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
+        Image(
+            painter =  painterResource(movie.imageResource),
+            contentDescription = "",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxWidth()
+        )
         Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = movie.title,
@@ -164,6 +172,12 @@ fun MovieDetailScreen(movieId: String?) {
 
     if (movie != null) {
         Column(modifier = Modifier.padding(10.dp)) {
+            Image(
+                painter =  painterResource(movie.imageResource),
+                contentDescription = "",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth()
+            )
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.headlineLarge
