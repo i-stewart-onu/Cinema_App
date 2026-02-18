@@ -138,11 +138,11 @@ fun MovieListScreen(
 fun MovieRow(movie: Movie, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(10.dp)
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.headlineMedium
@@ -156,7 +156,7 @@ fun MovieDetailScreen(movieId: String?) {
     val movie = sampleMovies.find { it.id == movieId }
 
     if (movie != null) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.headlineLarge
@@ -165,7 +165,7 @@ fun MovieDetailScreen(movieId: String?) {
                 text = "Rated: ${movie.rating}",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
             )
             Text(
                 text = "Plot Summary:",
@@ -175,7 +175,7 @@ fun MovieDetailScreen(movieId: String?) {
             Text(
                 text = movie.description,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 10.dp)
             )
 
             Text(
