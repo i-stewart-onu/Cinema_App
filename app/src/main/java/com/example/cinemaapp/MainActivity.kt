@@ -93,6 +93,14 @@ val sampleMovies = listOf(
         rating = "R",
         showtimes = "Advance Screening: Feb 26 @ 8:00 PM",
         imageResource = R.drawable.scream_7
+    ),
+    Movie(
+        id = "6",
+        title = "Iron Lung",
+        description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
+        rating = "R",
+        showtimes = "6:45 PM",
+        imageResource = R.drawable.iron_lung
     )
 )
 
