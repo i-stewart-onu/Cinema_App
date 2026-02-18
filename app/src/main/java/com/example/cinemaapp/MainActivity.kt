@@ -84,7 +84,14 @@ val sampleMovies = listOf(
         description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
         showtimes = "Advance Screening: Feb 26 @ 8:00 PM"
-    )
+    ),
+    Movie(
+        id = "6",
+        title = "Iron Lung",
+        description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
+        rating = "R",
+        showtimes = "6:45 PM, 9 PM"
+    ),
 )
 
 // ==========================================
