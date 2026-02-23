@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -192,7 +194,6 @@ fun MovieListScreen(
     movies: List<Movie>,
     onMovieClick: (String) -> Unit
 ) {
-
     val scrollBehavior =
         TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -235,9 +236,15 @@ fun MovieDetailScreen(
     onBack: () -> Unit
 ) {
 
+    val scrollBehavior =
+        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    val scrollState = rememberScrollState()
+
     val movie = sampleMovies.find { it.id == movieId }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
                 title = { Text(movie?.title ?: "Movie") },
@@ -246,6 +253,7 @@ fun MovieDetailScreen(
                     scrolledContainerColor = MaterialTheme.colorScheme.inverseSurface,
                     titleContentColor = MaterialTheme.colorScheme.inverseOnSurface
                 ),
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -263,6 +271,7 @@ fun MovieDetailScreen(
                 modifier = Modifier
                     .padding(padding)
                     .padding(10.dp)
+                    .verticalScroll(scrollState)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Image(
@@ -283,25 +292,26 @@ fun MovieDetailScreen(
                     )
                     Text(
                         text = "Plot Summary:",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.secondary
+                        style = MaterialTheme.typography.titleMedium
                     )
                     Text(
                         text = movie.description,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-
-                    Text(
-                        text = "Local Showtimes:",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = movie.showtimes[0],
                         style = MaterialTheme.typography.bodyLarge
                     )
 
+                    var showtimes = ""
+                    for(showtime in movie.showtimes) {
+                        showtimes += "$showtime, "
+                    }
+
+                    Text(
+                        text = "Local Showtimes:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = showtimes,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Text(
                         text = "Review Score:",
                         style = MaterialTheme.typography.titleMedium
