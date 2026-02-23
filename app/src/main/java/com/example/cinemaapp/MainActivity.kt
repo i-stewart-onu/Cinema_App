@@ -11,19 +11,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
@@ -49,8 +59,10 @@ data class Movie(
     val title: String,
     val description: String,
     val rating: String,
-    val showtimes: String,
-    val imageResource: Int
+    val showtimes: List<String>,
+    val imageResource: Int,
+    val reviewScore: Double,
+    val streamingPlatform: String
 )
 
 val sampleMovies = listOf(
@@ -59,40 +71,50 @@ val sampleMovies = listOf(
         title = "Avatar: Fire and Ash",
         description = "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
         rating = "PG-13",
-        showtimes = "12:00 PM, 3:30 PM, 7:00 PM, 10:45 PM",
-        imageResource = R.drawable.avatar
+        showtimes = listOf("12pm", "4pm", "8pm"),
+        imageResource = R.drawable.avatar,
+        reviewScore = 7.4,
+        streamingPlatform = "Disney+"
     ),
     Movie(
         id = "2",
         title = "Wuthering Heights",
         description = "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
         rating = "R",
-        showtimes = "4:15 PM, 6:50 PM, 9:30 PM",
-        imageResource = R.drawable.wuthering_heights
+        showtimes = listOf("12pm", "1pm", "3pm", "4pm", "6pm", "7pm", "9pm", "10pm"),
+        imageResource = R.drawable.wuthering_heights,
+        reviewScore = 6.3,
+        streamingPlatform = "Max"
     ),
     Movie(
         id = "3",
         title = "Goat",
         description = "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
         rating = "PG",
-        showtimes = "10:00 AM, 12:30 PM, 2:45 PM",
-        imageResource = R.drawable.goat
+        showtimes = listOf("12pm", "1pm", "3pm", "6pm", "7pm", "9pm"),
+        imageResource = R.drawable.goat,
+        reviewScore = 6.9,
+        streamingPlatform = "Netflix"
     ),
     Movie(
         id = "4",
         title = "Mercy",
         description = "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
         rating = "PG-13",
-        showtimes = "1:15 PM, 4:00 PM, 7:30 PM",
-        imageResource = R.drawable.mercy
+        showtimes = listOf("1pm", "4pm", "8pm"),
+        imageResource = R.drawable.mercy,
+        reviewScore = 6.2,
+        streamingPlatform = "Amazon Prime Video"
     ),
     Movie(
         id = "5",
         title = "Scream 7",
         description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
-        showtimes = "Advance Screening: Feb 26 @ 8:00 PM",
-        imageResource = R.drawable.scream_7
+        showtimes = listOf("N/A"),
+        imageResource = R.drawable.scream_7,
+        reviewScore = 0.0,
+        streamingPlatform = "Paramount+"
     )
 )
 
@@ -122,7 +144,7 @@ fun CinemaAppNavigation() {
             arguments = listOf(navArgument("movieId") { type = NavType.StringType })
         ) { backStackEntry ->
             val movieId = backStackEntry.arguments?.getString("movieId")
-            MovieDetailScreen(movieId = movieId)
+            MovieDetailScreen(movieId = movieId, onBack = {navController.popBackStack()})
         }
     }
 }
@@ -130,18 +152,6 @@ fun CinemaAppNavigation() {
 // ==========================================
 // UI SCREENS
 // ==========================================
-
-@Composable
-fun MovieListScreen(
-    movies: List<Movie>,
-    onMovieClick: (String) -> Unit
-) {
-    LazyColumn {
-        items(movies) { movie ->
-            MovieRow(movie = movie, onClick = { onMovieClick(movie.id) })
-        }
-    }
-}
 
 @Composable
 fun MovieRow(movie: Movie, onClick: () -> Unit) {
@@ -154,7 +164,7 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
         Image(
             painter =  painterResource(movie.imageResource),
             contentDescription = "",
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxWidth()
         )
         Column(modifier = Modifier.padding(10.dp)) {
@@ -166,50 +176,141 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieDetailScreen(movieId: String?) {
-    val movie = sampleMovies.find { it.id == movieId }
+fun MovieListScreen(
+    movies: List<Movie>,
+    onMovieClick: (String) -> Unit
+) {
 
-    if (movie != null) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Image(
-                painter =  painterResource(movie.imageResource),
-                contentDescription = "",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = movie.title,
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Text(
-                text = "Rated: ${movie.rating}",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
-            )
-            Text(
-                text = "Plot Summary:",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Text(
-                text = movie.description,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
+    val scrollBehavior =
+        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-            Text(
-                text = "Local Showtimes:",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Text(
-                text = movie.showtimes,
-                style = MaterialTheme.typography.bodyLarge
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+
+        topBar = {
+            MediumTopAppBar(
+                title = {
+                    Text("Cinema App")
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.inverseSurface,
+                    titleContentColor = MaterialTheme.colorScheme.inverseOnSurface
+                ),
+                scrollBehavior = scrollBehavior
             )
         }
-    } else {
-        Text(text = "Error: Movie not found")
+
+    ) { innerPadding ->
+
+        LazyColumn(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            items(movies) { movie ->
+                MovieRow(
+                    movie = movie,
+                    onClick = { onMovieClick(movie.id) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MovieDetailScreen(
+    movieId: String?,
+    onBack: () -> Unit
+) {
+
+    val movie = sampleMovies.find { it.id == movieId }
+
+    Scaffold(
+        topBar = {
+            MediumTopAppBar(
+                title = { Text(movie?.title ?: "Movie") },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.inverseSurface,
+                    titleContentColor = MaterialTheme.colorScheme.inverseOnSurface
+                ),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+
+        if (movie != null) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(10.dp)
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Image(
+                        painter =  painterResource(movie.imageResource),
+                        contentDescription = "",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = movie.title,
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    Text(
+                        text = "Rated: ${movie.rating}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
+                    )
+                    Text(
+                        text = "Plot Summary:",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = movie.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 10.dp)
+                    )
+
+                    Text(
+                        text = "Local Showtimes:",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = movie.showtimes[0],
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Review Score:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = movie.reviewScore.toString(),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Streaming Platform:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = movie.streamingPlatform,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
     }
 }
