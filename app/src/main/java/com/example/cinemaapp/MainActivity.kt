@@ -115,6 +115,16 @@ val sampleMovies = listOf(
         imageResource = R.drawable.scream_7,
         reviewScore = 0.0,
         streamingPlatform = "Paramount+"
+    ),
+    Movie(
+        id = "6",
+        title = "Iron Lung",
+        description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
+        rating = "R",
+        showtimes = listOf("6pm"),
+        imageResource = R.drawable.iron_lung,
+        reviewScore = 8.0,
+        streamingPlatform = "N/A"
     )
 )
 
