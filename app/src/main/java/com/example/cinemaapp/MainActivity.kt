@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,12 +22,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -37,6 +41,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -194,6 +199,12 @@ fun MovieListScreen(
     movies: List<Movie>,
     onMovieClick: (String) -> Unit
 ) {
+    var searchText by remember {mutableStateOf("")}
+
+    val filteredMovies = movies.filter {
+        it.title.contains(searchText, ignoreCase = true)
+    }
+
     val scrollBehavior =
         TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -216,14 +227,30 @@ fun MovieListScreen(
 
     ) { innerPadding ->
 
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding)
+        Column(
+            modifier = Modifier.padding(innerPadding).fillMaxSize()
         ) {
-            items(movies) { movie ->
-                MovieRow(
-                    movie = movie,
-                    onClick = { onMovieClick(movie.id) }
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {searchText = it},
+                label = { Text("Search") },
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+                singleLine = true
+            )
+            if(filteredMovies.isEmpty()) {
+                Text(
+                    text = "No movies found.",
+                    style = MaterialTheme.typography.titleMedium
                 )
+            } else {
+                LazyColumn {
+                    items(filteredMovies) { movie ->
+                        MovieRow(
+                            movie = movie,
+                            onClick = {onMovieClick(movie.id)}
+                        )
+                    }
+                }
             }
         }
     }
@@ -291,25 +318,11 @@ fun MovieDetailScreen(
                         modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
                     )
                     Text(
-                        text = "Plot Summary:",
+                        text = "Description:",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
                         text = movie.description,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    var showtimes = ""
-                    for(showtime in movie.showtimes) {
-                        showtimes += "$showtime, "
-                    }
-
-                    Text(
-                        text = "Local Showtimes:",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = showtimes,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
@@ -329,6 +342,50 @@ fun MovieDetailScreen(
                         text = movie.streamingPlatform,
                         style = MaterialTheme.typography.bodyLarge
                     )
+                    Text(
+                        text = "Local Showtimes:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column (
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Ada",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            movie.showtimes.forEach {
+                                Text(text = "-") //placeholder
+                            }
+                        }
+                        Column (
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Lima",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            movie.showtimes.forEach {
+                                Text(text = it)
+                            }
+                        }
+                        Column (
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = "Findlay",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            movie.showtimes.forEach {
+                                Text(text = "-") //placeholder
+                            }
+                        }
+                    }
                 }
             }
         }
