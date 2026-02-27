@@ -81,11 +81,11 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "AMC, Findlay" to listOf("3:45PM", "8:00PM")
         ),
         imageResource = R.drawable.avatar,
         reviewScore = 7.4,
-        streamingPlatform = "Disney+"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "2",
@@ -99,7 +99,7 @@ val sampleMovies = listOf(
         ),
         imageResource = R.drawable.wuthering_heights,
         reviewScore = 6.3,
-        streamingPlatform = "Max"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "3",
@@ -113,7 +113,7 @@ val sampleMovies = listOf(
         ),
         imageResource = R.drawable.goat,
         reviewScore = 6.9,
-        streamingPlatform = "Netflix"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "4",
@@ -135,13 +135,13 @@ val sampleMovies = listOf(
         description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatere, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("12:10PM", "12:40PM", "3:20PM"),
+            "AMC, Findlay" to listOf("3:15PM", "4:20PM", "6:15PM")
         ),
         imageResource = R.drawable.scream_7,
-        reviewScore = 0.0,
-        streamingPlatform = "Paramount+"
+        reviewScore = 6.1,
+        streamingPlatform = "Paramount+ (COMING SOON)"
     ),
     Movie(
         id = "6",
