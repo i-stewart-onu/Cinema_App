@@ -37,7 +37,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.cinemaapp.Movie
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -128,17 +127,7 @@ val sampleMovies = listOf(
         imageResource = R.drawable.iron_lung,
         reviewScore = 8.0,
         streamingPlatform = "N/A"
-    ),
-    Movie(
-        id = "7",
-        title = "Crime101",
-        description = "A master thief and an insurance broker join forces for a big heist, while a determined detective pursues them to prevent the multi-million dollar crime.",
-        rating = "R",
-        showtimes = listOf("12pm", "7:15pm", "9pm"),
-        imageResource = R.drawable.crime_101,
-        reviewScore = 7.1,
-        streamingPlatform = "N/A"
-)
+    )
 )
 
 // ==========================================
