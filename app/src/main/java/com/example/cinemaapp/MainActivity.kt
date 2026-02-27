@@ -79,8 +79,8 @@ val sampleMovies = listOf(
         description = "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
         rating = "PG-13",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
+            "Ada Theatere, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("Not Showing"),
             "AMC, Findlay" to listOf("3:45PM", "8:00PM")
         ),
         imageResource = R.drawable.avatar,
@@ -93,9 +93,9 @@ val sampleMovies = listOf(
         description = "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
         rating = "R",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("12:20PM", "3:40PM"),
+            "AMC, Findlay" to listOf("3:30PM", "7:10PM", "10:10PM")
         ),
         imageResource = R.drawable.wuthering_heights,
         reviewScore = 6.3,
@@ -107,9 +107,9 @@ val sampleMovies = listOf(
         description = "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
         rating = "PG",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("12:55PM", "4:10PM", "7:50PM", "10:20pm"),
+            "AMC, Findlay" to listOf("3:00PM", "9:10PM")
         ),
         imageResource = R.drawable.goat,
         reviewScore = 6.9,
@@ -121,9 +121,9 @@ val sampleMovies = listOf(
         description = "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
         rating = "PG-13",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("Not Showing"),
+            "AMC, Findlay" to listOf("Not Showing")
         ),
         imageResource = R.drawable.mercy,
         reviewScore = 6.2,
@@ -132,10 +132,10 @@ val sampleMovies = listOf(
     Movie(
         id = "5",
         title = "Scream 7",
-        description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
+        description = "The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("Not Showing"),
+            "Ada Theatre, Ada" to listOf("Not Showing"),
             "Regal American Mall, Lima" to listOf("12:10PM", "12:40PM", "3:20PM"),
             "AMC, Findlay" to listOf("3:15PM", "4:20PM", "6:15PM")
         ),
@@ -149,9 +149,9 @@ val sampleMovies = listOf(
         description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
         rating = "R",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("Not Showing"),
+            "AMC, Findlay" to listOf("Not Showing")
         ),
         imageResource = R.drawable.iron_lung,
         reviewScore = 6.2,
@@ -163,9 +163,9 @@ val sampleMovies = listOf(
         description = "Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there. As his memory slowly returns, he soon discovers he must solve the riddle behind a mysterious substance that's causing the sun to die out. As details of the mission unravel, he calls on his scientific training and sheer ingenuity -- but he may not have to do it alone.",
         rating = "PG-13",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("COMING SOON"),
+            "Regal American Mall, Lima" to listOf("COMING SOON"),
+            "AMC, Findlay" to listOf("COMING SOON")
         ),
         imageResource = R.drawable.hail_mary,
         reviewScore = 0.0,
@@ -177,9 +177,9 @@ val sampleMovies = listOf(
         description = "When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries of the animal world that are beyond anything she could have ever imagined.",
         rating = "PG",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("COMING SOON"),
+            "Regal American Mall, Lima" to listOf("COMING SOON"),
+            "AMC, Findlay" to listOf("COMING SOON")
         ),
         imageResource = R.drawable.hoppers,
         reviewScore = 0.0,
@@ -191,9 +191,9 @@ val sampleMovies = listOf(
         description = "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.",
         rating = "PG-13",
         showtimes = listOf(
-            "Ada Theatere, Ada" to listOf("N/A"),
-            "Regal American Mall, Lima" to listOf("N/A"),
-            "AMC, Findlay" to listOf("N/A")
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("Not Showing"),
+            "AMC, Findlay" to listOf("Not Showing")
         ),
         imageResource = R.drawable.interstellar,
         reviewScore = 8.7,
@@ -281,7 +281,7 @@ fun MovieListScreen(
         topBar = {
             MediumTopAppBar(
                 title = {
-                    Text("Cinema App")
+                    Text("Spotlight Local")
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.inverseSurface,
