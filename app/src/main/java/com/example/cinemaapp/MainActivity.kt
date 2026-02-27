@@ -79,9 +79,9 @@ val sampleMovies = listOf(
         description = "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
         rating = "PG-13",
         showtimes = listOf(
-            "Ada Theater" to listOf("N/A"),
-            "Mall Theater" to listOf("1pm", "5pm", "9pm"),
-            "Shannon Theatere, Blufton" to listOf("2pm", "6pm", "10pm")
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.avatar,
         reviewScore = 7.4,
@@ -95,7 +95,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.wuthering_heights,
         reviewScore = 6.3,
@@ -109,7 +109,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.goat,
         reviewScore = 6.9,
@@ -123,7 +123,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.mercy,
         reviewScore = 6.2,
@@ -137,7 +137,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.scream_7,
         reviewScore = 0.0,
@@ -151,7 +151,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.iron_lung,
         reviewScore = 6.2,
@@ -165,7 +165,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.hail_mary,
         reviewScore = 0.0,
@@ -179,7 +179,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.hoppers,
         reviewScore = 0.0,
@@ -193,7 +193,7 @@ val sampleMovies = listOf(
         showtimes = listOf(
             "Ada Theatere, Ada" to listOf("N/A"),
             "Regal American Mall, Lima" to listOf("N/A"),
-            "Shannon Theatere, Blufton" to listOf("N/A")
+            "AMC, Findlay" to listOf("N/A")
         ),
         imageResource = R.drawable.interstellar,
         reviewScore = 8.7,
@@ -413,43 +413,19 @@ fun MovieDetailScreen(
                         text = "Local Showtimes:",
                         style = MaterialTheme.typography.titleMedium
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column (
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.Start
-                        ) {
+                    movie.showtimes.forEach { (theater, times) ->
+                        Column(modifier = Modifier.padding(top = 10.dp)) {
+
                             Text(
-                                text = "Ada",
+                                text = theater,
                                 style = MaterialTheme.typography.titleMedium
                             )
-                            movie.showtimes.forEach {
-                                Text(text = "-") //placeholder
-                            }
-                        }
-                        Column (
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Lima",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            movie.showtimes.forEach {
-                                Text(text = "-")
-                            }
-                        }
-                        Column (
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = "Findlay",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            movie.showtimes.forEach {
-                                Text(text = "-") //placeholder
+
+                            times.forEach { time ->
+                                Text(
+                                    text = time,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
                             }
                         }
                     }
