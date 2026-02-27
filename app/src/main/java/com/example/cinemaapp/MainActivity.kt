@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,12 +22,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -37,6 +41,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +66,7 @@ data class Movie(
     val title: String,
     val description: String,
     val rating: String,
-    val showtimes: List<String>,
+    val showtimes: List<Pair<String, List<String>>>,
     val imageResource: Int,
     val reviewScore: Double,
     val streamingPlatform: String
@@ -73,37 +78,53 @@ val sampleMovies = listOf(
         title = "Avatar: Fire and Ash",
         description = "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
         rating = "PG-13",
-        showtimes = listOf("12pm", "4pm", "8pm"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("3:45PM", "8:00PM")
+        ),
         imageResource = R.drawable.avatar,
         reviewScore = 7.4,
-        streamingPlatform = "Disney+"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "2",
         title = "Wuthering Heights",
         description = "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
         rating = "R",
-        showtimes = listOf("12pm", "1pm", "3pm", "4pm", "6pm", "7pm", "9pm", "10pm"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
         imageResource = R.drawable.wuthering_heights,
         reviewScore = 6.3,
-        streamingPlatform = "Max"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "3",
         title = "Goat",
         description = "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
         rating = "PG",
-        showtimes = listOf("12pm", "1pm", "3pm", "6pm", "7pm", "9pm"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
         imageResource = R.drawable.goat,
         reviewScore = 6.9,
-        streamingPlatform = "Netflix"
+        streamingPlatform = "N/A"
     ),
     Movie(
         id = "4",
         title = "Mercy",
         description = "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
         rating = "PG-13",
-        showtimes = listOf("1pm", "4pm", "8pm"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
         imageResource = R.drawable.mercy,
         reviewScore = 6.2,
         streamingPlatform = "Amazon Prime Video"
@@ -113,21 +134,72 @@ val sampleMovies = listOf(
         title = "Scream 7",
         description = "COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.",
         rating = "R",
-        showtimes = listOf("N/A"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("12:10PM", "12:40PM", "3:20PM"),
+            "AMC, Findlay" to listOf("3:15PM", "4:20PM", "6:15PM")
+        ),
         imageResource = R.drawable.scream_7,
-        reviewScore = 0.0,
-        streamingPlatform = "Paramount+"
+        reviewScore = 6.1,
+        streamingPlatform = "Paramount+ (COMING SOON)"
     ),
     Movie(
         id = "6",
         title = "Iron Lung",
         description = "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
         rating = "R",
-        showtimes = listOf("6pm"),
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
         imageResource = R.drawable.iron_lung,
-        reviewScore = 8.0,
+        reviewScore = 6.2,
         streamingPlatform = "N/A"
-    )
+    ),
+    Movie(
+        id = "7",
+        title = "Project Hail Mary",
+        description = "Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there. As his memory slowly returns, he soon discovers he must solve the riddle behind a mysterious substance that's causing the sun to die out. As details of the mission unravel, he calls on his scientific training and sheer ingenuity -- but he may not have to do it alone.",
+        rating = "PG-13",
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
+        imageResource = R.drawable.hail_mary,
+        reviewScore = 0.0,
+        streamingPlatform = "N/A"
+    ),
+    Movie(
+        id = "8",
+        title = "Hoppers",
+        description = "When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries of the animal world that are beyond anything she could have ever imagined.",
+        rating = "PG",
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
+        imageResource = R.drawable.hoppers,
+        reviewScore = 0.0,
+        streamingPlatform = "N/A"
+    ),
+    Movie(
+        id = "9",
+        title = "Interstellar",
+        description = "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.",
+        rating = "PG-13",
+        showtimes = listOf(
+            "Ada Theatere, Ada" to listOf("N/A"),
+            "Regal American Mall, Lima" to listOf("N/A"),
+            "AMC, Findlay" to listOf("N/A")
+        ),
+        imageResource = R.drawable.interstellar,
+        reviewScore = 8.7,
+        streamingPlatform = "Pluto TV (FREE)"
+    ),
+    
 )
 
 // ==========================================
@@ -194,6 +266,12 @@ fun MovieListScreen(
     movies: List<Movie>,
     onMovieClick: (String) -> Unit
 ) {
+    var searchText by remember {mutableStateOf("")}
+
+    val filteredMovies = movies.filter {
+        it.title.contains(searchText, ignoreCase = true)
+    }
+
     val scrollBehavior =
         TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -216,14 +294,30 @@ fun MovieListScreen(
 
     ) { innerPadding ->
 
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding)
+        Column(
+            modifier = Modifier.padding(innerPadding).fillMaxSize()
         ) {
-            items(movies) { movie ->
-                MovieRow(
-                    movie = movie,
-                    onClick = { onMovieClick(movie.id) }
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {searchText = it},
+                label = { Text("Search") },
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+                singleLine = true
+            )
+            if(filteredMovies.isEmpty()) {
+                Text(
+                    text = "No movies found.",
+                    style = MaterialTheme.typography.titleMedium
                 )
+            } else {
+                LazyColumn {
+                    items(filteredMovies) { movie ->
+                        MovieRow(
+                            movie = movie,
+                            onClick = {onMovieClick(movie.id)}
+                        )
+                    }
+                }
             }
         }
     }
@@ -291,25 +385,11 @@ fun MovieDetailScreen(
                         modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
                     )
                     Text(
-                        text = "Plot Summary:",
+                        text = "Description:",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
                         text = movie.description,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    var showtimes = ""
-                    for(showtime in movie.showtimes) {
-                        showtimes += "$showtime, "
-                    }
-
-                    Text(
-                        text = "Local Showtimes:",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = showtimes,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
@@ -329,6 +409,26 @@ fun MovieDetailScreen(
                         text = movie.streamingPlatform,
                         style = MaterialTheme.typography.bodyLarge
                     )
+                    Text(
+                        text = "Local Showtimes:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    movie.showtimes.forEach { (theater, times) ->
+                        Column(modifier = Modifier.padding(top = 10.dp)) {
+
+                            Text(
+                                text = theater,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            times.forEach { time ->
+                                Text(
+                                    text = time,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
