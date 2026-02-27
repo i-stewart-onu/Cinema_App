@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -248,7 +251,7 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
         Image(
             painter =  painterResource(movie.imageResource),
             contentDescription = "",
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillWidth,
             modifier = Modifier.fillMaxWidth()
         )
         Column(modifier = Modifier.padding(10.dp)) {
@@ -323,6 +326,48 @@ fun MovieListScreen(
     }
 }
 
+@Composable
+fun ExpandableTheater(theater: String, times: List<String>) {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Text(
+                text = theater,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = if (expanded) {"▲"} else {"▼"},
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        if (expanded) {
+            Column() {
+                times.forEach { time ->
+                    Text(
+                        text = time,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailScreen(
@@ -371,8 +416,8 @@ fun MovieDetailScreen(
                     Image(
                         painter =  painterResource(movie.imageResource),
                         contentDescription = "",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxWidth()
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                     )
                     Text(
                         text = movie.title,
@@ -384,6 +429,7 @@ fun MovieDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)
                     )
+                    HorizontalDivider()
                     Text(
                         text = "Description:",
                         style = MaterialTheme.typography.titleMedium
@@ -392,6 +438,7 @@ fun MovieDetailScreen(
                         text = movie.description,
                         style = MaterialTheme.typography.bodyLarge
                     )
+                    HorizontalDivider()
                     Text(
                         text = "Review Score:",
                         style = MaterialTheme.typography.titleMedium
@@ -400,7 +447,7 @@ fun MovieDetailScreen(
                         text = movie.reviewScore.toString(),
                         style = MaterialTheme.typography.bodyLarge
                     )
-
+                    HorizontalDivider()
                     Text(
                         text = "Streaming Platform:",
                         style = MaterialTheme.typography.titleMedium
@@ -409,25 +456,13 @@ fun MovieDetailScreen(
                         text = movie.streamingPlatform,
                         style = MaterialTheme.typography.bodyLarge
                     )
+                    HorizontalDivider()
                     Text(
                         text = "Local Showtimes:",
                         style = MaterialTheme.typography.titleMedium
                     )
                     movie.showtimes.forEach { (theater, times) ->
-                        Column(modifier = Modifier.padding(top = 10.dp)) {
-
-                            Text(
-                                text = theater,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-
-                            times.forEach { time ->
-                                Text(
-                                    text = time,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
-                        }
+                        ExpandableTheater(theater, times)
                     }
                 }
             }
