@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -16,25 +17,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.cinemaapp.ui.theme.CinemaAppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                CinemaAppNavigation()
+            CinemaAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    CinemaAppNavigation()
+                }
             }
         }
     }
@@ -96,20 +103,22 @@ fun CinemaAppNavigation() {
 fun MovieRow(movie: Movie, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
         Image(
             painter = painterResource(movie.imageResource),
             contentDescription = "",
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.FillWidth,
             modifier = Modifier.fillMaxWidth()
         )
         Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = movie.title,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
@@ -143,24 +152,28 @@ fun MovieListScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
-                title = { Text("Cinema App") },
+                title = { Text("SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.inverseSurface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.inverseSurface,
-                    titleContentColor = MaterialTheme.colorScheme.inverseOnSurface
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 scrollBehavior = scrollBehavior
             )
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding).fillMaxSize()
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
         ) {
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
                 label = { Text("Search") },
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
                 singleLine = true
             )
 
@@ -172,7 +185,8 @@ fun MovieListScreen(
             ) {
                 Text(
                     text = "Sort By:",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.width(10.dp))
@@ -182,8 +196,8 @@ fun MovieListScreen(
                         text = sortOption.name.replace("_", " "),
                         modifier = Modifier
                             .clickable { expanded = true }
-                            .padding(8.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                            .padding(10.dp),
+                        style = MaterialTheme.typography.bodyMedium
                     )
 
                     DropdownMenu(
@@ -223,10 +237,16 @@ fun MovieListScreen(
             }
 
             if (filteredMovies.isEmpty()) {
-                Text(
-                    text = "No movies found.",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No movies found",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
             } else {
                 LazyColumn {
                     items(filteredMovies) { movie ->
@@ -256,18 +276,19 @@ fun MovieDetailScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
-                title = { Text(movie?.title ?: "Movie") },
+                title = { Text(text = "SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.inverseSurface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.inverseSurface,
-                    titleContentColor = MaterialTheme.colorScheme.inverseOnSurface
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.surface
                         )
                     }
                 }
@@ -284,22 +305,67 @@ fun MovieDetailScreen(
                 Image(
                     painter = painterResource(movie.imageResource),
                     contentDescription = "",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth()
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
                 )
-                Text(text = movie.title, style = MaterialTheme.typography.headlineLarge)
-                Text(text = "Rated: ${movie.rating}")
-                Text(text = movie.description)
-                Text(text = "Review Score: ${movie.reviewScore}")
-                Text(text = "Streaming Platform: ${movie.streamingPlatform}")
-                Text(text = "Local Showtimes:")
+                Text(text = movie.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(text = movie.description, style = MaterialTheme.typography.titleMedium)
+                HorizontalDivider()
+                Row {
+                    Text(text = "Rated: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(text = movie.rating, style = MaterialTheme.typography.bodyMedium)
+                }
+                HorizontalDivider()
+                Row{
+                    Text(text = "Review Score: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(text = movie.reviewScore.toString(), style = MaterialTheme.typography.bodyMedium)
+                }
+                HorizontalDivider()
+                Row{
+                    Text(text = "Streaming Platform: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(text = movie.streamingPlatform, style = MaterialTheme.typography.bodyMedium)
+                }
+                HorizontalDivider()
+                Text(text = "Local Showtimes:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 movie.showtimes.forEach { (theater, times) ->
-                    Column(modifier = Modifier.padding(top = 10.dp)) {
-                        Text(text = theater)
-                        times.forEach { time ->
-                            Text(text = time)
-                        }
-                    }
+                    ExpandableTheater(theater, times)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExpandableTheater(theater: String, times: List<String>) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = theater,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = if (expanded) {"▲"} else {"▼"},
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        if (expanded) {
+            Column() {
+                times.forEach { time ->
+                    Text(
+                        text = "⬤ $time",
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
