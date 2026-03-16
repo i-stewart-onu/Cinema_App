@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,36 +66,91 @@ enum class SortOption {
     STREAMING
 }
 
+enum class MainTab(val route: String, val label: String) {
+    MOVIES("movie_list", "MOVIES"),
+    THEATERS("theaters", "THEATERS")
+}
+
 val sampleMovies = listOf(
-    Movie("1","Avatar: Fire and Ash","Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.","PG-13",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("3:45PM","8:00PM")),R.drawable.avatar,7.4,"N/A"),
-    Movie("2","Wuthering Heights","A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.","R",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.wuthering_heights,6.3,"N/A"),
-    Movie("3","Goat","An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.","PG",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.goat,6.9,"N/A"),
-    Movie("4","Mercy","Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.","PG-13",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.mercy,6.2,"Amazon Prime Video"),
-    Movie("5","Scream 7","COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.","R",listOf("Ada Theatere, Ada" to listOf("Not Showing"),"Regal American Mall, Lima" to listOf("12:10PM","12:40PM","3:20PM"),"AMC, Findlay" to listOf("3:15PM","4:20PM","6:15PM")),R.drawable.scream_7,6.1,"Paramount+ (COMING SOON)"),
-    Movie("6","Iron Lung","Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.","R",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.iron_lung,6.2,"N/A"),
-    Movie("7","Project Hail Mary","Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there.","PG-13",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hail_mary,0.0,"N/A"),
-    Movie("8","Hoppers","When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries.","PG",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hoppers,0.0,"N/A"),
-    Movie("9","Interstellar","When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft.","PG-13",listOf("Ada Theatere, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.interstellar,8.7,"Pluto TV (FREE)")
+    Movie("1","Avatar: Fire and Ash","Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("3:45PM","8:00PM")),R.drawable.avatar,7.4,"N/A"),
+    Movie("2","Wuthering Heights","A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.","R",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.wuthering_heights,6.3,"N/A"),
+    Movie("3","Goat","An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.","PG",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.goat,6.9,"N/A"),
+    Movie("4","Mercy","Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.mercy,6.2,"Amazon Prime Video"),
+    Movie("5","Scream 7","COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.","R",listOf("Ada Theatre, Ada" to listOf("Not Showing"),"Regal American Mall, Lima" to listOf("12:10PM","12:40PM","3:20PM"),"AMC, Findlay" to listOf("3:15PM","4:20PM","6:15PM")),R.drawable.scream_7,6.1,"Paramount+ (COMING SOON)"),
+    Movie("6","Iron Lung","Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.","R",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.iron_lung,6.2,"N/A"),
+    Movie("7","Project Hail Mary","Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hail_mary,0.0,"N/A"),
+    Movie("8","Hoppers","When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries.","PG",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hoppers,0.0,"N/A"),
+    Movie("9","Interstellar","When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.interstellar,8.7,"Pluto TV (FREE)")
 )
 
 @Composable
 fun CinemaAppNavigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "movie_list") {
-        composable("movie_list") {
-            MovieListScreen(
-                movies = sampleMovies,
-                onMovieClick = { movieId ->
-                    navController.navigate("movie_details/$movieId")
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    Scaffold(
+        bottomBar = {
+            PrimaryTabRow(selectedTabIndex = selectedTab) {
+                MainTab.entries.forEachIndexed { index, tab ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = {
+                            selectedTab = index
+                            navController.navigate(tab.route) {
+                                popUpTo(navController.graph.startDestinationId)
+                                launchSingleTop = true
+                            }
+                        },
+                        text = {
+                            Text(tab.label)
+                        }
+                    )
                 }
-            )
+            }
         }
-        composable(
-            route = "movie_details/{movieId}",
-            arguments = listOf(navArgument("movieId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val movieId = backStackEntry.arguments?.getString("movieId")
-            MovieDetailScreen(movieId = movieId, onBack = { navController.popBackStack() })
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = MainTab.MOVIES.route,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(MainTab.MOVIES.route) {
+                MovieListScreen(
+                    movies = sampleMovies,
+                    onMovieClick = { movieId ->
+                        navController.navigate("movie_details/$movieId")
+                    }
+                )
+            }
+            composable(
+                route = "movie_details/{movieId}",
+                arguments = listOf(navArgument("movieId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val movieId = backStackEntry.arguments?.getString("movieId")
+
+                MovieDetailScreen(
+                    movieId = movieId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(MainTab.THEATERS.route) {
+                TheaterListScreen(
+                    onTheaterClick = { theaterName ->
+                        navController.navigate("theater_details/$theaterName")
+                    }
+                )
+            }
+            composable(
+                route = "theater_details/{theaterName}",
+                arguments = listOf(navArgument("theaterName") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val theaterName = backStackEntry.arguments?.getString("theaterName")
+
+                TheaterDetailScreen(
+                    theaterName = theaterName,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -312,22 +368,30 @@ fun MovieDetailScreen(
                 )
                 Text(text = movie.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 Text(text = movie.description, style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
                 Row {
                     Text(text = "Rated: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     Text(text = movie.rating, style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
                 Row{
                     Text(text = "Review Score: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     Text(text = movie.reviewScore.toString(), style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
                 Row{
                     Text(text = "Streaming Platform: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     Text(text = movie.streamingPlatform, style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(text = "Local Showtimes:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 movie.showtimes.forEach { (theater, times) ->
                     ExpandableTheater(theater, times)
@@ -360,12 +424,228 @@ fun ExpandableTheater(theater: String, times: List<String>) {
             )
         }
         if (expanded) {
-            Column() {
+            Column {
                 times.forEach { time ->
                     Text(
                         text = "⬤ $time",
                         style = MaterialTheme.typography.labelMedium
                     )
+                }
+            }
+        }
+    }
+}
+
+data class TheaterMovie(
+    val movieTitle: String,
+    val times: List<String>
+)
+
+data class Theater(
+    val name: String,
+    val movies: List<TheaterMovie>
+)
+
+fun buildTheaters(movies: List<Movie>): List<Theater> {
+    val theaterMap = mutableMapOf<String, MutableList<TheaterMovie>>()
+
+    for (movie in movies) {
+        for (showtime in movie.showtimes) {
+            val theaterName = showtime.first
+            val times = showtime.second
+            val validTimes = mutableListOf<String>()
+
+            for (time in times) {
+                if (time != "N/A" && time != "Not Showing") {
+                    validTimes.add(time)
+                }
+            }
+
+            if (validTimes.isNotEmpty()) {
+                val theaterMovie = TheaterMovie(
+                    movieTitle = movie.title,
+                    times = validTimes
+                )
+
+                if (theaterMap.containsKey(theaterName)) {
+                    theaterMap[theaterName]?.add(theaterMovie)
+                } else {
+                    theaterMap[theaterName] = mutableListOf(theaterMovie)
+                }
+            }
+        }
+    }
+
+    val theaterList = mutableListOf<Theater>()
+
+    for (entry in theaterMap) {
+        theaterList.add(
+            Theater(
+                name = entry.key,
+                movies = entry.value
+            )
+        )
+    }
+
+    return theaterList
+}
+
+fun getTheaterAddress(theaterName: String?): String {
+    if (theaterName == "Ada Theatre, Ada") {
+        return "215 S Main St, Ada, OH 45810"
+    }
+    if (theaterName == "Regal American Mall, Lima") {
+        return "2830 W Elm St, Lima, OH 45805"
+    }
+    if (theaterName == "AMC, Findlay") {
+        return "906 Interstate Dr, Findlay, OH 45840"
+    }
+    return "Address not available"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TheaterListScreen(
+    onTheaterClick: (String) -> Unit
+) {
+    val theaters = buildTheaters(sampleMovies)
+    val scrollBehavior =
+        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            MediumTopAppBar(
+                title = {
+                    Text(
+                        text = "SPOTLIGHT LIVE",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .padding(10.dp)
+        ) {
+            items(theaters) { theater ->
+                TheaterCard(
+                    theater = theater,
+                    onClick = { onTheaterClick(theater.name) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TheaterCard(
+    theater: Theater,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+            .clickable { onClick() }
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp)
+        ) {
+            Text(
+                text = theater.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TheaterDetailScreen(
+    theaterName: String?,
+    onBack: () -> Unit
+) {
+    val theaters = buildTheaters(sampleMovies)
+    val theater = theaters.find { it.name == theaterName }
+    val scrollState = rememberScrollState()
+
+    Scaffold(
+        topBar = {
+            MediumTopAppBar(
+                title = {
+                    Text(
+                        text = "SPOTLIGHT LIVE",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.surface
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        if (theater != null) {
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(10.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                Text(
+                    text = theater.name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = getTheaterAddress(theaterName),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
+                theater.movies.forEach { movie ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp)
+                        ) {
+                            Text(
+                                text = movie.movieTitle,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            movie.times.forEach { time ->
+                                Text(
+                                    text = "⬤ $time"
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
