@@ -72,15 +72,105 @@ enum class MainTab(val route: String, val label: String) {
 }
 
 val sampleMovies = listOf(
-    Movie("1","Avatar: Fire and Ash","Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("3:45PM","8:00PM")),R.drawable.avatar,7.4,"N/A"),
-    Movie("2","Wuthering Heights","A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.","R",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.wuthering_heights,6.3,"N/A"),
-    Movie("3","Goat","An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.","PG",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.goat,6.9,"N/A"),
-    Movie("4","Mercy","Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.mercy,6.2,"Amazon Prime Video"),
-    Movie("5","Scream 7","COMING SOON (Feb 27). The saga continues as Ghostface returns to terrorize a new generation of victims.","R",listOf("Ada Theatre, Ada" to listOf("Not Showing"),"Regal American Mall, Lima" to listOf("12:10PM","12:40PM","3:20PM"),"AMC, Findlay" to listOf("3:15PM","4:20PM","6:15PM")),R.drawable.scream_7,6.1,"Paramount+ (COMING SOON)"),
-    Movie("6","Iron Lung","Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.","R",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.iron_lung,6.2,"N/A"),
-    Movie("7","Project Hail Mary","Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hail_mary,0.0,"N/A"),
-    Movie("8","Hoppers","When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries.","PG",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.hoppers,0.0,"N/A"),
-    Movie("9","Interstellar","When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft.","PG-13",listOf("Ada Theatre, Ada" to listOf("N/A"),"Regal American Mall, Lima" to listOf("N/A"),"AMC, Findlay" to listOf("N/A")),R.drawable.interstellar,8.7,"Pluto TV (FREE)")
+    Movie(
+        "1", "Avatar: Fire and Ash",
+        "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
+        "PG-13",
+        listOf(
+            "Ada Theatre, Ada" to listOf("4:15PM", "7:30PM"),
+            "Regal American Mall, Lima" to listOf("12:00PM", "3:10PM", "6:20PM", "9:30PM"),
+            "AMC, Findlay" to listOf("11:45AM", "3:45PM", "6:50PM", "8:00PM", "10:15PM")
+        ),
+        R.drawable.avatar, 7.4, "Disney+"
+    ),
+    Movie(
+        "2", "Wuthering Heights",
+        "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
+        "R",
+        listOf(
+            "Ada Theatre, Ada" to listOf("5:00PM", "8:10PM"),
+            "Regal American Mall, Lima" to listOf("1:30PM", "4:45PM", "7:50PM"),
+            "AMC, Findlay" to listOf("2:00PM", "5:15PM", "8:30PM")
+        ),
+        R.drawable.wuthering_heights, 6.3, "N/A"
+    ),
+    Movie(
+        "3", "Goat",
+        "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
+        "PG",
+        listOf(
+            "Ada Theatre, Ada" to listOf("1:00PM", "3:30PM", "6:00PM"),
+            "Regal American Mall, Lima" to listOf("11:00AM", "1:15PM", "3:30PM", "5:45PM"),
+            "AMC, Findlay" to listOf("12:30PM", "2:45PM", "5:00PM", "7:10PM")
+        ),
+        R.drawable.goat, 6.9, "N/A"
+    ),
+    Movie(
+        "4", "Mercy",
+        "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
+        "PG-13",
+        listOf(
+            "Ada Theatre, Ada" to listOf("7:00PM", "9:30PM"),
+            "Regal American Mall, Lima" to listOf("2:00PM", "4:30PM", "7:15PM", "9:45PM"),
+            "AMC, Findlay" to listOf("1:15PM", "4:00PM", "6:45PM", "9:20PM")
+        ),
+        R.drawable.mercy, 6.2, "Amazon Prime Video"
+    ),
+    Movie(
+        "5", "Scream 7",
+        "The saga continues as Ghostface returns to terrorize a new generation of victims.",
+        "R",
+        listOf(
+            "Ada Theatre, Ada" to listOf("Not Showing"),
+            "Regal American Mall, Lima" to listOf("12:10PM", "12:40PM", "3:20PM", "6:00PM", "9:10PM"),
+            "AMC, Findlay" to listOf("3:15PM", "4:20PM", "6:15PM", "8:00PM", "10:30PM")
+        ),
+        R.drawable.scream_7, 6.1, "Paramount+"
+    ),
+    Movie(
+        "6", "Iron Lung",
+        "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
+        "R",
+        listOf(
+            "Ada Theatre, Ada" to listOf("8:30PM"),
+            "Regal American Mall, Lima" to listOf("3:45PM", "6:30PM", "9:15PM"),
+            "AMC, Findlay" to listOf("2:30PM", "5:20PM", "8:10PM")
+        ),
+        R.drawable.iron_lung, 6.2, "Netflix"
+    ),
+    Movie(
+        "7", "Project Hail Mary",
+        "Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there.",
+        "PG-13",
+        listOf(
+            "Ada Theatre, Ada" to listOf("COMING SOON"),
+            "Regal American Mall, Lima" to listOf("COMING SOON"),
+            "AMC, Findlay" to listOf("COMING SOON")
+        ),
+        R.drawable.hail_mary, 0.0, "N/A"
+    ),
+    Movie(
+        "8", "Hoppers",
+        "When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries.",
+        "PG",
+        listOf(
+            "Ada Theatre, Ada" to listOf("COMING SOON"),
+            "Regal American Mall, Lima" to listOf("COMING SOON"),
+            "AMC, Findlay" to listOf("COMING SOON")
+        ),
+        R.drawable.hoppers, 0.0, "N/A"
+    ),
+    Movie(
+        "9", "Interstellar",
+        "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft beyond the galaxy to find mankind a new home.",
+        "PG-13",
+        listOf(
+            "Ada Theatre, Ada" to listOf("2:00PM", "7:15PM"),
+            "Regal American Mall, Lima" to listOf("1:00PM", "4:30PM", "8:00PM"),
+            "AMC, Findlay" to listOf("12:45PM", "4:15PM", "7:45PM")
+        ),
+        R.drawable.interstellar, 8.7, "Pluto TV (FREE)"
+    )
 )
 
 @Composable
