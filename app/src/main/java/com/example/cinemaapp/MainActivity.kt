@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,14 +24,19 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
+import java.time.LocalDate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.compose.SubcomposeAsyncImage
 import com.example.cinemaapp.ui.theme.CinemaAppTheme
+import com.example.cinemaapp.ui.viewmodel.CinemaUiState
+import com.example.cinemaapp.ui.viewmodel.MovieViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,129 +60,61 @@ data class Movie(
     val description: String,
     val rating: String,
     val showtimes: List<Pair<String, List<String>>>,
-    val imageResource: Int,
+    val imageResource: Int? = null,
+    val imageUrl: String? = null,
     val reviewScore: Double,
-    val streamingPlatform: String
+    val streamingPlatform: String,
+    val releaseDate: String = "",
+    val genres: List<String> = emptyList()
 )
 
-enum class SortOption {
-    TITLE,
-    REVIEW_SCORE,
-    RATING,
-    STREAMING
+data class TheaterMovie(
+    val movieTitle: String,
+    val times: List<String>
+)
+
+data class Theater(
+    val name: String,
+    val movies: List<TheaterMovie>,
+    val address: String = ""
+)
+
+enum class SortOption(val label: String) {
+    TITLE("Title (A-Z)"),
+    REVIEW_SCORE("Review Score"),
+    RATING("Rating"),
+    RELEASE_DATE("Release Date"),
+    GENRE("Genre"),
+    STREAMING("Streaming")
+}
+
+fun sortComparator(opt: SortOption): Comparator<Movie> = when (opt) {
+    SortOption.TITLE        -> compareBy { it.title.lowercase() }
+    SortOption.REVIEW_SCORE -> compareByDescending { it.reviewScore }
+    SortOption.RATING       -> compareBy { it.rating }
+    SortOption.RELEASE_DATE -> compareByDescending { it.releaseDate }
+    SortOption.GENRE        -> compareBy { it.genres.firstOrNull()?.lowercase() ?: "" }
+    SortOption.STREAMING    -> compareBy { it.streamingPlatform }
 }
 
 enum class MainTab(val route: String, val label: String) {
-    MOVIES("movie_list", "MOVIES"),
-    THEATERS("theaters", "THEATERS")
+    NOW_PLAYING("now_playing", "NOW PLAYING"),
+    COMING_SOON("coming_soon", "COMING SOON"),
+    THEATERS("theaters", "THEATERS"),
+    BROWSE("browse", "ALL MOVIES")
 }
-
-val sampleMovies = listOf(
-    Movie(
-        "1", "Avatar: Fire and Ash",
-        "Jake Sully and Neytiri face a new threat: the 'Ash People,' a clan of Na'vi who utilize fire and reject the pacifist ways of Eywa.",
-        "PG-13",
-        listOf(
-            "Ada Theatre, Ada" to listOf("4:15PM", "7:30PM"),
-            "Regal American Mall, Lima" to listOf("12:00PM", "3:10PM", "6:20PM", "9:30PM"),
-            "AMC, Findlay" to listOf("11:45AM", "3:45PM", "6:50PM", "8:00PM", "10:15PM")
-        ),
-        R.drawable.avatar, 7.4, "Disney+"
-    ),
-    Movie(
-        "2", "Wuthering Heights",
-        "A bold new adaptation of the classic romance starring Margot Robbie and Jacob Elordi. A story of passion and revenge on the moors.",
-        "R",
-        listOf(
-            "Ada Theatre, Ada" to listOf("5:00PM", "8:10PM"),
-            "Regal American Mall, Lima" to listOf("1:30PM", "4:45PM", "7:50PM"),
-            "AMC, Findlay" to listOf("2:00PM", "5:15PM", "8:30PM")
-        ),
-        R.drawable.wuthering_heights, 6.3, "N/A"
-    ),
-    Movie(
-        "3", "Goat",
-        "An animated sports comedy featuring the voices of Steph Curry and David Harbour about a literal goat trying to make it in the big leagues.",
-        "PG",
-        listOf(
-            "Ada Theatre, Ada" to listOf("1:00PM", "3:30PM", "6:00PM"),
-            "Regal American Mall, Lima" to listOf("11:00AM", "1:15PM", "3:30PM", "5:45PM"),
-            "AMC, Findlay" to listOf("12:30PM", "2:45PM", "5:00PM", "7:10PM")
-        ),
-        R.drawable.goat, 6.9, "N/A"
-    ),
-    Movie(
-        "4", "Mercy",
-        "Sci-fi thriller starring Chris Pratt. A detective is accused of a violent crime and must prove his innocence in a future where capital crime has increased.",
-        "PG-13",
-        listOf(
-            "Ada Theatre, Ada" to listOf("7:00PM", "9:30PM"),
-            "Regal American Mall, Lima" to listOf("2:00PM", "4:30PM", "7:15PM", "9:45PM"),
-            "AMC, Findlay" to listOf("1:15PM", "4:00PM", "6:45PM", "9:20PM")
-        ),
-        R.drawable.mercy, 6.2, "Amazon Prime Video"
-    ),
-    Movie(
-        "5", "Scream 7",
-        "The saga continues as Ghostface returns to terrorize a new generation of victims.",
-        "R",
-        listOf(
-            "Ada Theatre, Ada" to listOf("Not Showing"),
-            "Regal American Mall, Lima" to listOf("12:10PM", "12:40PM", "3:20PM", "6:00PM", "9:10PM"),
-            "AMC, Findlay" to listOf("3:15PM", "4:20PM", "6:15PM", "8:00PM", "10:30PM")
-        ),
-        R.drawable.scream_7, 6.1, "Paramount+"
-    ),
-    Movie(
-        "6", "Iron Lung",
-        "Survivors of the apocalypse send a convict in a small submarine to explore a desolate moon that's an ocean of blood.",
-        "R",
-        listOf(
-            "Ada Theatre, Ada" to listOf("8:30PM"),
-            "Regal American Mall, Lima" to listOf("3:45PM", "6:30PM", "9:15PM"),
-            "AMC, Findlay" to listOf("2:30PM", "5:20PM", "8:10PM")
-        ),
-        R.drawable.iron_lung, 6.2, "Netflix"
-    ),
-    Movie(
-        "7", "Project Hail Mary",
-        "Science teacher Ryland Grace wakes up on a spaceship with no recollection of who he is or how he got there.",
-        "PG-13",
-        listOf(
-            "Ada Theatre, Ada" to listOf("COMING SOON"),
-            "Regal American Mall, Lima" to listOf("COMING SOON"),
-            "AMC, Findlay" to listOf("COMING SOON")
-        ),
-        R.drawable.hail_mary, 0.0, "N/A"
-    ),
-    Movie(
-        "8", "Hoppers",
-        "When scientists discover a way to transform human consciousness into robotic animals, Mabel uses the new technology to uncover mysteries.",
-        "PG",
-        listOf(
-            "Ada Theatre, Ada" to listOf("COMING SOON"),
-            "Regal American Mall, Lima" to listOf("COMING SOON"),
-            "AMC, Findlay" to listOf("COMING SOON")
-        ),
-        R.drawable.hoppers, 0.0, "N/A"
-    ),
-    Movie(
-        "9", "Interstellar",
-        "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft beyond the galaxy to find mankind a new home.",
-        "PG-13",
-        listOf(
-            "Ada Theatre, Ada" to listOf("2:00PM", "7:15PM"),
-            "Regal American Mall, Lima" to listOf("1:00PM", "4:30PM", "8:00PM"),
-            "AMC, Findlay" to listOf("12:45PM", "4:15PM", "7:45PM")
-        ),
-        R.drawable.interstellar, 8.7, "Pluto TV (FREE)"
-    )
-)
 
 @Composable
 fun CinemaAppNavigation() {
     val navController = rememberNavController()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val movieViewModel: MovieViewModel = viewModel()
+    val uiState by movieViewModel.uiState.collectAsState()
+
+    fun findMovie(movieId: String?): Movie? =
+        uiState.nowPlaying.find { it.id == movieId }
+            ?: uiState.upcoming.find { it.id == movieId }
+            ?: uiState.browseCatalog.find { it.id == movieId }
 
     Scaffold(
         bottomBar = {
@@ -191,9 +129,7 @@ fun CinemaAppNavigation() {
                                 launchSingleTop = true
                             }
                         },
-                        text = {
-                            Text(tab.label)
-                        }
+                        text = { Text(tab.label) }
                     )
                 }
             }
@@ -201,47 +137,104 @@ fun CinemaAppNavigation() {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = MainTab.MOVIES.route,
+            startDestination = MainTab.NOW_PLAYING.route,
             modifier = Modifier.padding(padding)
         ) {
-            composable(MainTab.MOVIES.route) {
+            composable(MainTab.NOW_PLAYING.route) {
                 MovieListScreen(
-                    movies = sampleMovies,
-                    onMovieClick = { movieId ->
-                        navController.navigate("movie_details/$movieId")
-                    }
+                    movies = uiState.nowPlaying,
+                    isLoading = uiState.isLoading,
+                    error = uiState.error,
+                    emptyMessage = "No movies currently in theaters.",
+                    onMovieClick = { navController.navigate("movie_details/$it") },
+                    onRefresh = { movieViewModel.loadData() }
+                )
+            }
+            composable(MainTab.COMING_SOON.route) {
+                MovieListScreen(
+                    movies = uiState.upcoming,
+                    isLoading = uiState.isLoading,
+                    error = uiState.error,
+                    emptyMessage = "No upcoming movies found.",
+                    onMovieClick = { navController.navigate("movie_details/$it") },
+                    onRefresh = { movieViewModel.loadData() }
                 )
             }
             composable(
                 route = "movie_details/{movieId}",
                 arguments = listOf(navArgument("movieId") { type = NavType.StringType })
             ) { backStackEntry ->
-                val movieId = backStackEntry.arguments?.getString("movieId")
-
                 MovieDetailScreen(
-                    movieId = movieId,
+                    movie = findMovie(backStackEntry.arguments?.getString("movieId")),
                     onBack = { navController.popBackStack() }
                 )
             }
             composable(MainTab.THEATERS.route) {
                 TheaterListScreen(
-                    onTheaterClick = { theaterName ->
-                        navController.navigate("theater_details/$theaterName")
-                    }
+                    theaters = uiState.theaters,
+                    isLoading = uiState.isLoading,
+                    onTheaterClick = { navController.navigate("theater_details/$it") }
+                )
+            }
+            composable(MainTab.BROWSE.route) {
+                MovieListScreen(
+                    movies = uiState.browseCatalog,
+                    isLoading = uiState.isLoading,
+                    error = uiState.error,
+                    emptyMessage = "No movies found.",
+                    onMovieClick = { navController.navigate("movie_details/$it") },
+                    onRefresh = { movieViewModel.loadData() }
                 )
             }
             composable(
                 route = "theater_details/{theaterName}",
                 arguments = listOf(navArgument("theaterName") { type = NavType.StringType })
             ) { backStackEntry ->
-                val theaterName = backStackEntry.arguments?.getString("theaterName")
-
                 TheaterDetailScreen(
-                    theaterName = theaterName,
+                    theater = uiState.theaters.find {
+                        it.name == backStackEntry.arguments?.getString("theaterName")
+                    },
                     onBack = { navController.popBackStack() }
                 )
             }
         }
+    }
+}
+
+@Composable
+fun MoviePoster(movie: Movie, modifier: Modifier = Modifier) {
+    if (movie.imageUrl != null) {
+        SubcomposeAsyncImage(
+            model = movie.imageUrl,
+            contentDescription = movie.title,
+            contentScale = ContentScale.FillWidth,
+            modifier = modifier.fillMaxWidth(),
+            loading = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                }
+            }
+        )
+    } else if (movie.imageResource != null) {
+        Image(
+            painter = painterResource(movie.imageResource),
+            contentDescription = movie.title,
+            contentScale = ContentScale.FillWidth,
+            modifier = modifier.fillMaxWidth()
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
     }
 }
 
@@ -253,12 +246,7 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Image(
-            painter = painterResource(movie.imageResource),
-            contentDescription = "",
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxWidth()
-        )
+        MoviePoster(movie = movie)
         Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = movie.title,
@@ -270,36 +258,87 @@ fun MovieRow(movie: Movie, onClick: () -> Unit) {
     }
 }
 
+@Composable
+fun FilterDropdown(
+    label: String,
+    selected: String,
+    options: List<String>,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "$label:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.width(6.dp))
+        Box {
+            Text(
+                text = selected,
+                modifier = Modifier.clickable { expanded = true }.padding(8.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = { onSelect(option); expanded = false }
+                    )
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieListScreen(
     movies: List<Movie>,
-    onMovieClick: (String) -> Unit
+    isLoading: Boolean,
+    error: String?,
+    emptyMessage: String,
+    onMovieClick: (String) -> Unit,
+    onRefresh: () -> Unit
 ) {
     var searchText by remember { mutableStateOf("") }
-    var sortOption by remember { mutableStateOf(SortOption.TITLE) }
-    var expanded by remember { mutableStateOf(false) }
+    var sortPrimary by remember { mutableStateOf(SortOption.TITLE) }
+    var sortSecondary by remember { mutableStateOf<SortOption?>(null) }
+    var selectedRating by remember { mutableStateOf("All") }
+    var selectedGenre by remember { mutableStateOf("All") }
+    var selectedPlatform by remember { mutableStateOf("All") }
+
+    val availableRatings = remember(movies) {
+        listOf("All") + movies.map { it.rating }.filter { it != "N/A" && it.isNotBlank() }.distinct().sorted()
+    }
+    val availableGenres = remember(movies) {
+        listOf("All") + movies.flatMap { it.genres }.distinct().sorted()
+    }
+    val availablePlatforms = remember(movies) {
+        listOf("All") + movies
+            .map { it.streamingPlatform }
+            .filter { it != "N/A" && it.isNotBlank() }
+            .flatMap { it.split(", ") }
+            .distinct()
+            .sorted()
+    }
+
+    val comparator = sortComparator(sortPrimary).let { primary ->
+        sortSecondary?.let { primary.then(sortComparator(it)) } ?: primary
+    }
 
     val filteredMovies = movies
         .filter { it.title.contains(searchText, ignoreCase = true) }
-        .sortedWith(
-            when (sortOption) {
-                SortOption.TITLE -> compareBy { it.title }
-                SortOption.REVIEW_SCORE -> compareByDescending { it.reviewScore }
-                SortOption.RATING -> compareBy { it.rating }
-                SortOption.STREAMING -> compareBy { it.streamingPlatform }
-            }
-        )
+        .filter { selectedRating == "All" || it.rating == selectedRating }
+        .filter { selectedGenre == "All" || it.genres.contains(selectedGenre) }
+        .filter { selectedPlatform == "All" || it.streamingPlatform.split(", ").contains(selectedPlatform) }
+        .sortedWith(comparator)
 
-    val scrollBehavior =
-        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
                 title = { Text("SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -324,82 +363,88 @@ fun MovieListScreen(
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Sort By:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
+                FilterDropdown(
+                    label = "Sort",
+                    selected = sortPrimary.label,
+                    options = SortOption.entries.map { it.label },
+                    onSelect = { label -> sortPrimary = SortOption.entries.first { it.label == label } }
                 )
+                Spacer(modifier = Modifier.width(16.dp))
+                FilterDropdown(
+                    label = "Then",
+                    selected = sortSecondary?.label ?: "None",
+                    options = listOf("None") + SortOption.entries.map { it.label },
+                    onSelect = { label -> sortSecondary = SortOption.entries.firstOrNull { it.label == label } }
+                )
+            }
 
-                Spacer(modifier = Modifier.width(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilterDropdown(
+                    label = "Rating",
+                    selected = selectedRating,
+                    options = availableRatings,
+                    onSelect = { selectedRating = it }
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                FilterDropdown(
+                    label = "Genre",
+                    selected = selectedGenre,
+                    options = availableGenres,
+                    onSelect = { selectedGenre = it }
+                )
+            }
 
-                Box {
-                    Text(
-                        text = sortOption.name.replace("_", " "),
-                        modifier = Modifier
-                            .clickable { expanded = true }
-                            .padding(10.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilterDropdown(
+                    label = "Platform",
+                    selected = selectedPlatform,
+                    options = availablePlatforms,
+                    onSelect = { selectedPlatform = it }
+                )
+            }
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Title (A-Z)") },
-                            onClick = {
-                                sortOption = SortOption.TITLE
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Review Score") },
-                            onClick = {
-                                sortOption = SortOption.REVIEW_SCORE
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Rating") },
-                            onClick = {
-                                sortOption = SortOption.RATING
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Streaming Platform") },
-                            onClick = {
-                                sortOption = SortOption.STREAMING
-                                expanded = false
-                            }
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+                error != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(error, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = onRefresh) { Text("Retry") }
+                        }
+                    }
+                }
+                filteredMovies.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = emptyMessage,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontStyle = FontStyle.Italic
                         )
                     }
                 }
-            }
-
-            if (filteredMovies.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No movies found",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
-            } else {
-                LazyColumn {
-                    items(filteredMovies) { movie ->
-                        MovieRow(
-                            movie = movie,
-                            onClick = { onMovieClick(movie.id) }
-                        )
+                else -> {
+                    LazyColumn {
+                        items(filteredMovies) { movie ->
+                            MovieRow(movie = movie, onClick = { onMovieClick(movie.id) })
+                        }
                     }
                 }
             }
@@ -410,20 +455,18 @@ fun MovieListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailScreen(
-    movieId: String?,
+    movie: Movie?,
     onBack: () -> Unit
 ) {
-    val scrollBehavior =
-        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val scrollState = rememberScrollState()
-    val movie = sampleMovies.find { it.id == movieId }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
                 title = { Text(text = "SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -448,16 +491,20 @@ fun MovieDetailScreen(
                     .padding(10.dp)
                     .verticalScroll(scrollState)
             ) {
-                Image(
-                    painter = painterResource(movie.imageResource),
-                    contentDescription = "",
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                MoviePoster(
+                    movie = movie,
+                    modifier = Modifier.clip(RoundedCornerShape(10.dp))
                 )
                 Text(text = movie.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 Text(text = movie.description, style = MaterialTheme.typography.titleMedium)
+                if (movie.genres.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = movie.genres.joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(10.dp))
@@ -468,21 +515,34 @@ fun MovieDetailScreen(
                 Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(10.dp))
-                Row{
+                Row {
                     Text(text = "Review Score: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text(text = movie.reviewScore.toString(), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = if (movie.reviewScore > 0) movie.reviewScore.toString() else "N/A",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(10.dp))
-                Row{
+                Row {
                     Text(text = "Streaming Platform: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     Text(text = movie.streamingPlatform, style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(text = "Local Showtimes:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = when {
+                        movie.showtimes.isNotEmpty() -> "Local Showtimes:"
+                        movie.releaseDate.isNotEmpty() && runCatching {
+                            LocalDate.parse(movie.releaseDate).isBefore(LocalDate.now())
+                        }.getOrDefault(false) -> "Not in theaters."
+                        else -> "Not yet in theaters."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 movie.showtimes.forEach { (theater, times) ->
                     ExpandableTheater(theater, times)
                 }
@@ -494,9 +554,7 @@ fun MovieDetailScreen(
 @Composable
 fun ExpandableTheater(theater: String, times: List<String>) {
     var expanded by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -509,110 +567,35 @@ fun ExpandableTheater(theater: String, times: List<String>) {
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = if (expanded) {"▲"} else {"▼"},
+                text = if (expanded) "▲" else "▼",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
         if (expanded) {
             Column {
                 times.forEach { time ->
-                    Text(
-                        text = "⬤ $time",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Text(text = "⬤ $time", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
     }
-}
-
-data class TheaterMovie(
-    val movieTitle: String,
-    val times: List<String>
-)
-
-data class Theater(
-    val name: String,
-    val movies: List<TheaterMovie>
-)
-
-fun buildTheaters(movies: List<Movie>): List<Theater> {
-    val theaterMap = mutableMapOf<String, MutableList<TheaterMovie>>()
-
-    for (movie in movies) {
-        for (showtime in movie.showtimes) {
-            val theaterName = showtime.first
-            val times = showtime.second
-            val validTimes = mutableListOf<String>()
-
-            for (time in times) {
-                if (time != "N/A" && time != "Not Showing") {
-                    validTimes.add(time)
-                }
-            }
-
-            if (validTimes.isNotEmpty()) {
-                val theaterMovie = TheaterMovie(
-                    movieTitle = movie.title,
-                    times = validTimes
-                )
-
-                if (theaterMap.containsKey(theaterName)) {
-                    theaterMap[theaterName]?.add(theaterMovie)
-                } else {
-                    theaterMap[theaterName] = mutableListOf(theaterMovie)
-                }
-            }
-        }
-    }
-
-    val theaterList = mutableListOf<Theater>()
-
-    for (entry in theaterMap) {
-        theaterList.add(
-            Theater(
-                name = entry.key,
-                movies = entry.value
-            )
-        )
-    }
-
-    return theaterList
-}
-
-fun getTheaterAddress(theaterName: String?): String {
-    if (theaterName == "Ada Theatre, Ada") {
-        return "215 S Main St, Ada, OH 45810"
-    }
-    if (theaterName == "Regal American Mall, Lima") {
-        return "2830 W Elm St, Lima, OH 45805"
-    }
-    if (theaterName == "AMC, Findlay") {
-        return "906 Interstate Dr, Findlay, OH 45840"
-    }
-    return "Address not available"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TheaterListScreen(
+    theaters: List<Theater>,
+    isLoading: Boolean,
     onTheaterClick: (String) -> Unit
 ) {
-    val theaters = buildTheaters(sampleMovies)
-    val scrollBehavior =
-        TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
-                title = {
-                    Text(
-                        text = "SPOTLIGHT LIVE",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                title = { Text(text = "SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -621,35 +604,32 @@ fun TheaterListScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .padding(10.dp)
-        ) {
-            items(theaters) { theater ->
-                TheaterCard(
-                    theater = theater,
-                    onClick = { onTheaterClick(theater.name) }
-                )
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(modifier = Modifier.padding(padding).padding(10.dp)) {
+                items(theaters) { theater ->
+                    TheaterCard(theater = theater, onClick = { onTheaterClick(theater.name) })
+                }
             }
         }
     }
 }
 
 @Composable
-fun TheaterCard(
-    theater: Theater,
-    onClick: () -> Unit
-) {
+fun TheaterCard(theater: Theater, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp)
             .clickable { onClick() }
     ) {
-        Column(
-            modifier = Modifier.padding(10.dp)
-        ) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Text(
                 text = theater.name,
                 style = MaterialTheme.typography.headlineSmall,
@@ -662,23 +642,16 @@ fun TheaterCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TheaterDetailScreen(
-    theaterName: String?,
+    theater: Theater?,
     onBack: () -> Unit
 ) {
-    val theaters = buildTheaters(sampleMovies)
-    val theater = theaters.find { it.name == theaterName }
     val scrollState = rememberScrollState()
 
     Scaffold(
         topBar = {
             MediumTopAppBar(
-                title = {
-                    Text(
-                        text = "SPOTLIGHT LIVE",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                title = { Text(text = "SPOTLIGHT LIVE", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -709,7 +682,7 @@ fun TheaterDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = getTheaterAddress(theaterName),
+                    text = theater.address.ifEmpty { "Address not available" },
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(10.dp))
@@ -721,18 +694,11 @@ fun TheaterDetailScreen(
                             .fillMaxWidth()
                             .padding(bottom = 10.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(10.dp)
-                        ) {
-                            Text(
-                                text = movie.movieTitle,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(text = movie.movieTitle, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(10.dp))
                             movie.times.forEach { time ->
-                                Text(
-                                    text = "⬤ $time"
-                                )
+                                Text(text = "⬤ $time")
                             }
                         }
                     }

@@ -60,4 +60,15 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom)) //for top navigation bar
     implementation("androidx.compose.material:material-icons-extended") //for arrow
 
+    // Networking
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // ViewModel for Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+
 }
