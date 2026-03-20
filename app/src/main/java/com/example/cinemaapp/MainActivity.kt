@@ -3,12 +3,12 @@ package com.example.cinemaapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import java.time.LocalDate
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +34,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.SubcomposeAsyncImage
 import com.example.cinemaapp.ui.theme.CinemaAppTheme
-import com.example.cinemaapp.ui.viewmodel.CinemaUiState
 import com.example.cinemaapp.ui.viewmodel.MovieViewModel
 
 class MainActivity : ComponentActivity() {
@@ -54,13 +52,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class ShowtimeEntry(val theater: String, val times: List<String>)
+
 data class Movie(
     val id: String,
     val title: String,
     val description: String,
     val rating: String,
-    val showtimes: List<Pair<String, List<String>>>,
-    val imageResource: Int? = null,
+    val showtimesByDay: Map<String, List<ShowtimeEntry>> = emptyMap(),
     val imageUrl: String? = null,
     val reviewScore: Double,
     val streamingPlatform: String,
@@ -88,8 +87,11 @@ enum class SortOption(val label: String) {
     STREAMING("Streaming")
 }
 
+private fun titleSortKey(title: String): String =
+    title.lowercase().replace(Regex("[^a-z0-9 ]"), "").trim()
+
 fun sortComparator(opt: SortOption): Comparator<Movie> = when (opt) {
-    SortOption.TITLE        -> compareBy { it.title.lowercase() }
+    SortOption.TITLE        -> compareBy { titleSortKey(it.title) }
     SortOption.REVIEW_SCORE -> compareByDescending { it.reviewScore }
     SortOption.RATING       -> compareBy { it.rating }
     SortOption.RELEASE_DATE -> compareByDescending { it.releaseDate }
@@ -220,13 +222,6 @@ fun MoviePoster(movie: Movie, modifier: Modifier = Modifier) {
                     CircularProgressIndicator(modifier = Modifier.size(32.dp))
                 }
             }
-        )
-    } else if (movie.imageResource != null) {
-        Image(
-            painter = painterResource(movie.imageResource),
-            contentDescription = movie.title,
-            contentScale = ContentScale.FillWidth,
-            modifier = modifier.fillMaxWidth()
         )
     } else {
         Box(
@@ -460,6 +455,9 @@ fun MovieDetailScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val scrollState = rememberScrollState()
+    var selectedDay by remember(movie?.id) {
+        mutableStateOf(movie?.showtimesByDay?.keys?.firstOrNull() ?: "")
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -534,7 +532,7 @@ fun MovieDetailScreen(
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = when {
-                        movie.showtimes.isNotEmpty() -> "Local Showtimes:"
+                        movie.showtimesByDay.isNotEmpty() -> "Local Showtimes:"
                         movie.releaseDate.isNotEmpty() && runCatching {
                             LocalDate.parse(movie.releaseDate).isBefore(LocalDate.now())
                         }.getOrDefault(false) -> "Not in theaters."
@@ -543,8 +541,32 @@ fun MovieDetailScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
-                movie.showtimes.forEach { (theater, times) ->
-                    ExpandableTheater(theater, times)
+                if (movie.showtimesByDay.size > 1) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        movie.showtimesByDay.keys.forEachIndexed { index, day ->
+                            FilterChip(
+                                selected = selectedDay == day,
+                                onClick = { selectedDay = day },
+                                label = { Text(day) },
+                                modifier = Modifier.padding(
+                                    end = if (index < movie.showtimesByDay.size - 1) 8.dp else 0.dp
+                                )
+                            )
+                        }
+                    }
+                }
+                val currentShowtimes = movie.showtimesByDay[selectedDay] ?: emptyList()
+                if (currentShowtimes.isEmpty() && movie.showtimesByDay.isNotEmpty()) {
+                    Text(
+                        text = "No showtimes available.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    currentShowtimes.forEach { entry ->
+                        ExpandableTheater(entry.theater, entry.times)
+                    }
                 }
             }
         }

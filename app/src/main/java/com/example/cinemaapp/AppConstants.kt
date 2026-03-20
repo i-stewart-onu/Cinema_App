@@ -21,33 +21,14 @@ object AppConstants {
         337  to "Disney+",
         15   to "Hulu",
         1899 to "Max",
-        384  to "Max",
         531  to "Paramount+",
         350  to "Apple TV+",
         9    to "Prime Video",
         386  to "Peacock",
-        387  to "Peacock",
         613  to "Tubi",
         283  to "Crunchyroll",
         526  to "AMC+",
         43   to "Starz",
-        37   to "Showtime",
-        257  to "fuboTV",
-        203  to "ESPN+"
-    )
-
-    val CITIES_IN_RADIUS = listOf(
-        "Lima, Ohio, United States",
-        "Findlay, Ohio, United States",
-        "Toledo, Ohio, United States",
-        "Fort Wayne, Indiana, United States",
-        "Dayton, Ohio, United States",
-        "Columbus, Ohio, United States",
-        "Springfield, Ohio, United States",
-        "Mansfield, Ohio, United States",
-        "Akron, Ohio, United States",
-        "Cleveland, Ohio, United States",
-        "Ann Arbor, Michigan, United States",
-        "Detroit, Michigan, United States"
+        257  to "fuboTV"
     )
 }

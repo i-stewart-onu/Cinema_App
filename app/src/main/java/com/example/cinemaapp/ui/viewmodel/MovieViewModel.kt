@@ -1,6 +1,7 @@
 package com.example.cinemaapp.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cinemaapp.Movie
 import com.example.cinemaapp.Theater
@@ -19,8 +20,8 @@ data class CinemaUiState(
     val error: String? = null
 )
 
-class MovieViewModel : ViewModel() {
-    private val repository = MovieRepository()
+class MovieViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = MovieRepository(application)
 
     private val _uiState = MutableStateFlow(CinemaUiState())
     val uiState: StateFlow<CinemaUiState> = _uiState.asStateFlow()
@@ -31,23 +32,39 @@ class MovieViewModel : ViewModel() {
 
     fun loadData() {
         viewModelScope.launch {
-            _uiState.value = CinemaUiState(isLoading = true)
+            // Show cached data immediately if available
+            val cached = repository.loadCache()
+            if (cached != null) {
+                _uiState.value = CinemaUiState(
+                    nowPlaying = cached.nowPlaying,
+                    upcoming = cached.upcoming,
+                    theaters = cached.theaters,
+                    browseCatalog = cached.browseCatalog,
+                    isLoading = false
+                )
+            } else {
+                _uiState.value = CinemaUiState(isLoading = true)
+            }
+
+            // Always refresh from network
             val result = repository.fetchAll()
-            _uiState.value = if (result.isSuccess) {
+            if (result.isSuccess) {
                 val data = result.getOrThrow()
-                CinemaUiState(
+                repository.saveCache(data)
+                _uiState.value = CinemaUiState(
                     nowPlaying = data.nowPlaying,
                     upcoming = data.upcoming,
                     theaters = data.theaters,
                     browseCatalog = data.browseCatalog,
                     isLoading = false
                 )
-            } else {
-                CinemaUiState(
+            } else if (cached == null) {
+                _uiState.value = CinemaUiState(
                     isLoading = false,
                     error = result.exceptionOrNull()?.message ?: "Unknown error loading data."
                 )
             }
+            // If network fails but cache exists, keep showing cached data silently
         }
     }
 }

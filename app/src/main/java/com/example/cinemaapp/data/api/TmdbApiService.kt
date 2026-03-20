@@ -4,11 +4,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface TmdbApiService {
-    @GET("movie/now_playing?language=en-US&region=US&page=1")
-    suspend fun getNowPlaying(
-        @Query("api_key") apiKey: String
-    ): TmdbNowPlayingResponse
-
     @GET("movie/upcoming?language=en-US&region=US&page=1")
     suspend fun getUpcoming(
         @Query("api_key") apiKey: String

@@ -1,12 +1,17 @@
 package com.example.cinemaapp.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.example.cinemaapp.AppConstants
 import com.example.cinemaapp.Movie
+import com.example.cinemaapp.ShowtimeEntry
 import com.example.cinemaapp.Theater
 import com.example.cinemaapp.TheaterMovie
 import com.example.cinemaapp.data.api.NetworkModule
 import com.example.cinemaapp.data.api.TmdbMovie
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -33,9 +38,32 @@ data class CinemaData(
     val browseCatalog: List<Movie>
 )
 
-class MovieRepository {
+private data class CacheWrapper(val data: CinemaData, val timestamp: Long)
+
+class MovieRepository(private val context: Context) {
     private val tmdbService = NetworkModule.tmdbService
     private val serpApiService = NetworkModule.serpApiService
+    private val gson = Gson()
+    private val cacheFile get() = File(context.filesDir, "cinema_cache.json")
+
+    fun saveCache(data: CinemaData) {
+        runCatching {
+            val wrapper = CacheWrapper(data = data, timestamp = System.currentTimeMillis())
+            cacheFile.writeText(gson.toJson(wrapper))
+        }.onFailure { Log.e(TAG, "Failed to save cache: ${it.message}") }
+    }
+
+    fun loadCache(): CinemaData? {
+        if (!cacheFile.exists()) return null
+        return runCatching {
+            val json = cacheFile.readText()
+            val type = object : TypeToken<CacheWrapper>() {}.type
+            val wrapper = gson.fromJson<CacheWrapper>(json, type)
+            // Cache valid for 1 hour
+            if (System.currentTimeMillis() - wrapper.timestamp > 60 * 60 * 1000L) null
+            else wrapper.data
+        }.onFailure { Log.e(TAG, "Failed to load cache: ${it.message}") }.getOrNull()
+    }
 
     suspend fun fetchAll(): Result<CinemaData> = withContext(Dispatchers.IO) {
         try {
@@ -106,27 +134,34 @@ class MovieRepository {
             }
             Log.d(TAG, "Movies with streaming data: ${movieStreamingMap.size}")
 
-            val movieTheaterTimes = mutableMapOf<String, MutableMap<String, MutableSet<String>>>()
+            // movieName → day → theater → times
+            val movieShowtimesByDay = mutableMapOf<String, MutableMap<String, MutableMap<String, MutableSet<String>>>>()
             val theaterAddresses = mutableMapOf<String, String>()
             for ((movieName, response) in showtimeResults) {
-                val todayShowtimes = response?.showtimes?.firstOrNull() ?: run {
+                val days = response?.showtimes
+                if (days.isNullOrEmpty()) {
                     Log.d(TAG, "$movieName: no showtimes in response")
                     continue
                 }
-                val theaterMap = movieTheaterTimes.getOrPut(movieName) { mutableMapOf() }
-                for (serpTheater in todayShowtimes.theaters ?: emptyList()) {
-                    val theaterName = serpTheater.name ?: continue
-                    theaterAddresses.putIfAbsent(theaterName, serpTheater.address ?: "")
-                    val times = theaterMap.getOrPut(theaterName) { mutableSetOf() }
-                    serpTheater.showing?.forEach { showing ->
-                        showing.time?.forEach { times.add(it) }
+                val dayMap = movieShowtimesByDay.getOrPut(movieName) { mutableMapOf() }
+                for (serpDay in days) {
+                    val dayLabel = (serpDay.day ?: "Today")
+                        .replace(Regex("([a-z])([A-Z])"), "$1 $2")
+                    val theaterMap = dayMap.getOrPut(dayLabel) { mutableMapOf() }
+                    for (serpTheater in serpDay.theaters ?: emptyList()) {
+                        val theaterName = serpTheater.name ?: continue
+                        theaterAddresses.putIfAbsent(theaterName, serpTheater.address ?: "")
+                        val times = theaterMap.getOrPut(theaterName) { mutableSetOf() }
+                        serpTheater.showing?.forEach { showing ->
+                            showing.time?.forEach { times.add(it) }
+                        }
                     }
                 }
-                Log.d(TAG, "$movieName: ${theaterMap.size} theaters")
+                Log.d(TAG, "$movieName: ${dayMap.size} days")
             }
-            Log.d(TAG, "Total movies with theater data: ${movieTheaterTimes.size}")
+            Log.d(TAG, "Total movies with theater data: ${movieShowtimesByDay.size}")
 
-            val tmdbSearchResults: Map<String, TmdbMovie?> = movieTheaterTimes.keys
+            val tmdbSearchResults: Map<String, TmdbMovie?> = movieShowtimesByDay.keys
                 .map { title ->
                     async {
                         val result = runCatching {
@@ -162,7 +197,7 @@ class MovieRepository {
                 .mapNotNull { (id, cert) -> cert?.let { id to it } }
                 .toMap()
 
-            val nowPlayingMovies = movieTheaterTimes.entries.mapIndexed { index, (title, theaterTimesMap) ->
+            val nowPlayingMovies = movieShowtimesByDay.entries.mapIndexed { index, (title, dayMap) ->
                 val tmdb = tmdbSearchResults[title]
                 if (tmdb == null) Log.d(TAG, "No TMDb match for: $title")
                 Movie(
@@ -170,7 +205,9 @@ class MovieRepository {
                     title = title,
                     description = tmdb?.overview?.ifBlank { null } ?: "No description available.",
                     rating = tmdb?.id?.let { ratingsMap[it] } ?: "N/A",
-                    showtimes = theaterTimesMap.map { (theater, times) -> theater to times.sorted() },
+                    showtimesByDay = dayMap.mapValues { (_, theaterMap) ->
+                        theaterMap.map { (theater, times) -> ShowtimeEntry(theater, times.sorted()) }
+                    },
                     imageUrl = tmdb?.posterPath?.let { "${NetworkModule.TMDB_IMAGE_BASE_URL}$it" },
                     reviewScore = tmdb?.voteAverage ?: 0.0,
                     streamingPlatform = tmdb?.id?.let { movieStreamingMap[it]?.sorted()?.joinToString(", ") } ?: "N/A",
@@ -179,7 +216,7 @@ class MovieRepository {
                 )
             }
 
-            val inTheatersTitles = movieTheaterTimes.keys.map { normalizeTitle(it) }.toSet()
+            val inTheatersTitles = movieShowtimesByDay.keys.map { normalizeTitle(it) }.toSet()
             val upcomingMovies = upcomingRaw
                 .filterNot { normalizeTitle(it.title) in inTheatersTitles }
                 .mapIndexed { index, tmdb ->
@@ -188,7 +225,6 @@ class MovieRepository {
                         title = tmdb.title,
                         description = tmdb.overview.ifBlank { "No description available." },
                         rating = ratingsMap[tmdb.id] ?: "N/A",
-                        showtimes = emptyList(),
                         imageUrl = tmdb.posterPath?.let { "${NetworkModule.TMDB_IMAGE_BASE_URL}$it" },
                         reviewScore = tmdb.voteAverage,
                         streamingPlatform = movieStreamingMap[tmdb.id]?.sorted()?.joinToString(", ") ?: "N/A",
@@ -199,9 +235,10 @@ class MovieRepository {
 
             val theaterMoviesMap = mutableMapOf<String, MutableList<TheaterMovie>>()
             for (movie in nowPlayingMovies) {
-                for ((theater, times) in movie.showtimes) {
-                    theaterMoviesMap.getOrPut(theater) { mutableListOf() }
-                        .add(TheaterMovie(movie.title, times))
+                val firstDayShowtimes = movie.showtimesByDay.values.firstOrNull() ?: emptyList()
+                for (entry in firstDayShowtimes) {
+                    theaterMoviesMap.getOrPut(entry.theater) { mutableListOf() }
+                        .add(TheaterMovie(movie.title, entry.times))
                 }
             }
             val theaters = theaterMoviesMap.map { (name, movies) ->
@@ -215,7 +252,6 @@ class MovieRepository {
                         title = tmdb.title,
                         description = tmdb.overview.ifBlank { "No description available." },
                         rating = ratingsMap[tmdb.id] ?: "N/A",
-                        showtimes = emptyList(),
                         imageUrl = tmdb.posterPath?.let { "${NetworkModule.TMDB_IMAGE_BASE_URL}$it" },
                         reviewScore = tmdb.voteAverage,
                         streamingPlatform = movieStreamingMap[tmdb.id]?.sorted()?.joinToString(", ") ?: "N/A",
